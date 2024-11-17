@@ -1,8 +1,14 @@
 from kafka import KafkaConsumer
+import json
 
-# Crear un consumidor
-consumer = KafkaConsumer('traffic-events', bootstrap_servers=['localhost:9092'])
+# Crear un consumidor que se conecta al tópico 'traffic-events'
+consumer = KafkaConsumer(
+    'traffic-events',
+    bootstrap_servers=['localhost:9092'],
+    group_id='traffic-consumer-group',
+    value_deserializer=lambda m: json.loads(m.decode('utf-8'))
+)
 
-# Consumir mensajes
+# Consumir mensajes y procesarlos
 for message in consumer:
-    print(f"Message: {message.value.decode('utf-8')}")
+    print(f"Received message: {message.value}")
