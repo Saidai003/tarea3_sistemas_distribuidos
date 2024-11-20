@@ -1,10 +1,10 @@
-version: '3.8'
 
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: bitnami/zookeeper:3.9
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOO_ENABLE_AUTH: "no"
+      ALLOW_ANONYMOUS_LOGIN: "yes"
     ports:
       - "2181:2181"
 
@@ -15,27 +15,42 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_CFG_LISTENERS: INTERNAL://:9092,EXTERNAL://0.0.0.0:9093
-      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka1:9092,EXTERNAL://localhost:9093
+      KAFKA_CFG_LISTENERS: INTERNAL://:9092,EXTERNAL://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9093
       KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
-      ALLOW_PLAINTEXT_LISTENER: 'yes'
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      ALLOW_PLAINTEXT_LISTENER: "yes"
     ports:
       - "9092:9092"
       - "9093:9093"
 
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    depends_on:
+      - kafka
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    networks:
+      - kafka-network
+
   spark:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.4.0
     depends_on:
       - kafka
     environment:
-      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_MODE: "master"
     command: spark-submit --master local[2] /opt/app/processor.py
     volumes:
       - ./processor.py:/opt/app/processor.py
 
   cassandra:
-    image: cassandra:latest
+    image: cassandra:4.0
     ports:
       - "9042:9042"
     volumes:
@@ -67,3 +82,10 @@ services:
       - ./scrapper.py:/app/scrapper.py
     working_dir: /app
     command: python scrapper.py
+
+
+networks:
+  kafka-network:
+    driver: bridge
+  es-network:
+    driver: bridge
