@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Create a Kafka producer
 producer = KafkaProducer(
-    bootstrap_servers=['localhost:9092'],  # Replace with your Kafka broker's address
+    bootstrap_servers=['localhost:9093'],  # Replace with your Kafka broker's address
     value_serializer=lambda v: json.dumps(v).encode('utf-8'),  # Serialize value to JSON
     key_serializer=lambda k: k.encode('utf-8') if k else None,  # Serialize key if provided
     retries=3,  # Retry on failure
@@ -19,7 +19,7 @@ producer = KafkaProducer(
 try:
     for i in range(10):
         producer.send(
-            topic='my-topic',  # Replace with your topic name
+            topic='reportes_trafico',  # Replace with your topic name
             key=f'key-{i}',  # Optional key
             value={'number': i}  # Value to send
         )
