@@ -1,2 +1,6 @@
 selenium-wire
 confluent-kafka
+pyspark
+cassandra-driver
+requests
+selenium webdriver-manager
